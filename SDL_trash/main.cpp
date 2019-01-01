@@ -104,6 +104,9 @@ bool setTiles() {
 	// Tile offset
 	int x = 0, y = 0;
 
+	// Generate random maps
+	system("python assets\\maps\\generate_level.py");
+
 	// Open the map
 	std::ifstream map("assets\\maps\\map1.map");
 	if (map.fail()) {
@@ -409,8 +412,8 @@ int main(int argc, char *argv[]) {
 	particleTextures.push_back(gParticleRed);
 
 	// Dots
-	Dot dot1(0, 50, &particleTextures);
-	Dot dot2(SCREEN_WIDTH-50, 50, &particleTextures);
+	Dot dot1(0, 60, &particleTextures);
+	Dot dot2(SCREEN_WIDTH-60, 60, &particleTextures);
 
 	// Modulation components
 	Uint8 r = 255;
