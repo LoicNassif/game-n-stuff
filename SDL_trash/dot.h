@@ -50,6 +50,9 @@ public:
 	int getPosX();
 	int getPosY();
 
+	// Set position
+	void setPosition(int x, int y);
+
 	// Get win status
 	bool isWin();
 

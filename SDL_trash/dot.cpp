@@ -430,6 +430,11 @@ int Dot::getPosY()
 	return mPosY;
 }
 
+void Dot::setPosition(int x, int y)
+{
+	mPosX = x; mPosY = y;
+}
+
 bool Dot::isWin()
 {
 	return mWin;

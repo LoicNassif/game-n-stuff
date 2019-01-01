@@ -370,8 +370,8 @@ bool loadMedia() {
 	}
 
 	dot1_texture_map.push_back(&gDotTexture1);
-	dot1_texture_map.push_back(&gDot2Texture1);
-	dot2_texture_map.push_back(&gDotTexture2);
+	dot1_texture_map.push_back(&gDotTexture2);
+	dot2_texture_map.push_back(&gDot2Texture1);
 	dot2_texture_map.push_back(&gDot2Texture2);
 
 	// Load particles
@@ -591,31 +591,45 @@ int main(int argc, char *argv[]) {
 			gWindow[0].renderTexture(&gFPSTextTexture, 0, 0);
 		}
 		else {
-			// Move dot
-			dot1.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot2.getColliders(),
-				tiles_map[curr_lvl]);
-			dot2.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot1.getColliders(),
-				tiles_map[curr_lvl]);
+			if ((dot1.isWin() || dot2.isWin()) && curr_lvl < TOTAL_LEVELS - 1) {
+				curr_lvl++;
+				dot1.setPosition(0, 60);
+				dot2.setPosition(SCREEN_WIDTH - 60, 60);
+				gWindow[1].renderClear();
 
-			// Clear screens
-			for (int i = 0; i < TOTAL_WINDOWS; i++) gWindow[i].renderClear();
+				// Render the level
+				for (int i = 0; i < TOTAL_TILES; i++) {
+					(*tiles_map[curr_lvl])[i]->render(texture_map[curr_lvl], &gWindow[1], tile_clips_map[curr_lvl]);
+				}
 
-			// Render the level
-			for (int i = 0; i < TOTAL_TILES; i++) {
-				(*tiles_map[curr_lvl])[i]->render(texture_map[curr_lvl], &gWindow[1], tile_clips_map[curr_lvl]);
+				// Render dot
+				dot1.render(0, 0, dot1_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+				dot2.render(0, 0, dot2_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+
 			}
+			else {
+				// Move dot
+				dot1.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot2.getColliders(),
+					tiles_map[curr_lvl]);
+				dot2.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot1.getColliders(),
+					tiles_map[curr_lvl]);
 
-			// Render dot
-			dot1.render(0, 0, dot1_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
-			dot2.render(0, 0, dot2_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+				// Clear screens
+				for (int i = 0; i < TOTAL_WINDOWS; i++) gWindow[i].renderClear();
+
+				// Render the level
+				for (int i = 0; i < TOTAL_TILES; i++) {
+					(*tiles_map[curr_lvl])[i]->render(texture_map[curr_lvl], &gWindow[1], tile_clips_map[curr_lvl]);
+				}
+
+				// Render dot
+				dot1.render(0, 0, dot1_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+				dot2.render(0, 0, dot2_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+			}
 
 			// Render the FPS
 			gWindow[1].renderText(&gFPSTextTexture, FPSFont, &gameWindowTextColor, &FPSText);
 			gWindow[1].renderTexture(&gFPSTextTexture, 0, 0);
-
-			if ((dot1.isWin() || dot2.isWin()) && curr_lvl < TOTAL_LEVELS-1) {
-				curr_lvl++;
-			}
 		}
 		// Update All Screens
 		for (int i = 0; i < TOTAL_WINDOWS; i++) gWindow[i].renderUpdate();
