@@ -55,6 +55,10 @@ public:
 	SDL_Renderer *getRenderer();
 	void setRenderer(SDL_Renderer *rend);
 
+	// Window first init status
+	bool isNew();
+	void setNew(bool status);
+
 	// Window focii
 	bool hasMouseFocus();
 	bool hasKeyboardFocus();
@@ -77,5 +81,7 @@ private:
 	bool mFullScreen;
 	bool mMinimized;
 	bool mShown;
+
+	bool mNew = true;
 };
 

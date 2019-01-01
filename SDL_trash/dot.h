@@ -50,6 +50,9 @@ public:
 	int getPosX();
 	int getPosY();
 
+	// Get win status
+	bool isWin();
+
 private:
 	// The X and Y offsets of the dot
 	int mPosX, mPosY;
@@ -75,5 +78,8 @@ private:
 	// Show the particles
 	void renderParticles(SDL_Renderer *gRenderer, std::vector<LTexture> *particleTextures,
 						LTexture *ShimmerTexture);
+
+	// flag to see if a dot won
+	bool mWin=false;
 };
 

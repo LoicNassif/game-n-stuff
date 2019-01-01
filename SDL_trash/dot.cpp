@@ -33,13 +33,31 @@ bool checkCollision(SDL_Rect a, SDL_Rect b) {
 	return true;
 }
 
+bool touchesVictory(SDL_Rect box, std::vector<Tile *> *tiles, int tile_victor)
+{
+	// Go through the tiles
+	for (size_t i = 0; i < tiles->size(); ++i) {
+		// If the tile is a victory tile
+		if ((*tiles)[i]->getType() == tile_victor) {
+			// If the collision box touches the victory tile
+			if (checkCollision(box, (*tiles)[i]->getBox())) {
+				return true; 
+			}
+		}
+	}
+
+	return false;
+}
+
 bool touchesWalls(SDL_Rect box, std::vector<Tile *> *tiles, int tile_center, int tile_topleft) {
 	// Go through the tiles
 	for (size_t i = 0; i < tiles->size(); ++i) {
 		// If the tile is a wall type tile
 		if (((*tiles)[i]->getType() < tile_center) && ((*tiles)[i]->getType() < tile_topleft)) {
 			// If the collision box touches the wall tile
-			if (checkCollision(box, (*tiles)[i]->getBox())) return true;
+			if (checkCollision(box, (*tiles)[i]->getBox())) { 
+				return true; 
+			}
 		}
 	}
 
@@ -297,15 +315,16 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 			}
 		}
 	}
-	// Check if dot hit tile
+	// Check if dot hit tile or victory tile
 	if (TileColliders != NULL) {
-		for (size_t i = 0; i < TileColliders->size(); i++) {
-			if (touchesWalls(mCollider, TileColliders, 3,3)) {
-				mPosX -= mVelX;
-				mCollider.x = mPosX;
-				shiftColliders();
-			}
+		if (touchesVictory(mCollider, TileColliders, 1)) {
+			mWin = true;
 		}
+		if (touchesWalls(mCollider, TileColliders, 3,3)) {
+			mPosX -= mVelX;
+			mCollider.x = mPosX;
+			shiftColliders();
+		}	
 	}
 
 	// Move the dot up or down
@@ -350,14 +369,15 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 			}
 		}
 	}
-	// Check if dot hit tile
+	// Check if dot hit tile or victory tile
 	if (TileColliders != NULL) {
-		for (size_t i = 0; i < TileColliders->size(); i++) {
-			if (touchesWalls(mCollider, TileColliders, 3, 3)) {
-				mPosY -= mVelY;
-				mCollider.y = mPosY;
-				shiftColliders();
-			}
+		if (touchesVictory(mCollider, TileColliders, 1)) {
+			mWin = true;
+		}
+		if (touchesWalls(mCollider, TileColliders, 3, 3)) {
+			mPosY -= mVelY;
+			mCollider.y = mPosY;
+			shiftColliders();
 		}
 	}
 }
@@ -408,6 +428,11 @@ int Dot::getPosX()
 int Dot::getPosY()
 {
 	return mPosY;
+}
+
+bool Dot::isWin()
+{
+	return mWin;
 }
 
 void Dot::renderParticles(SDL_Renderer *gRenderer, std::vector<LTexture> *particleTextures,

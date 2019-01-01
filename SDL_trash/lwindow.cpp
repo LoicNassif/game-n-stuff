@@ -239,6 +239,16 @@ void LWindow::setRenderer(SDL_Renderer *rend)
 	mRenderer = rend;
 }
 
+bool LWindow::isNew()
+{
+	return mNew;
+}
+
+void LWindow::setNew(bool status)
+{
+	mNew = status;
+}
+
 bool LWindow::hasMouseFocus()
 {
 	return mMouseFocus;

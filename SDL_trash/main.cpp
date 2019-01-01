@@ -22,14 +22,17 @@ const int SCREEN_HEIGHT = 480;
 const int SCREEN_WIDTH = 600;
 
 // Total number of tiles
-const int TOTAL_TILES = 80;
+const int TOTAL_TILES = 180;
+
+// Total number of levels
+const int TOTAL_LEVELS = 2;
 
 // Total number of tile sprites
 const int TOTAL_TILE_SPRITES = 4;
 
 // Tiles dimensions
-const int TILE_WIDTH = 60;
-const int TILE_HEIGHT = 60;
+const int TILE_WIDTH = 40;
+const int TILE_HEIGHT = 40;
 
 // The different tile types
 enum TileTypes {
@@ -62,6 +65,9 @@ LWindow gWindow[TOTAL_WINDOWS];
 TTF_Font *gFont = NULL;
 TTF_Font *FPSFont = NULL;
 
+// Loading texture
+LTexture gLoadTexture;
+
 // Rendered texture
 LTexture gTextTexture;
 
@@ -76,13 +82,27 @@ LTexture gParticleRed;
 LTexture gShimmerTexture;
 
 // Tiles texture
-LTexture gTileTexture;
-std::vector<Tile *> tiles;
-SDL_Rect gTileClips[TOTAL_TILE_SPRITES];
+// Lvl 1
+LTexture gTileTexture1;
+std::vector<Tile *> tiles1;
+SDL_Rect gTileClips1[TOTAL_TILE_SPRITES];
+// Lvl 2
+LTexture gTileTexture2;
+std::vector<Tile *> tiles2;
+SDL_Rect gTileClips2[TOTAL_TILE_SPRITES];
+
+// Map to keep array tiles in order
+std::vector<LTexture *> texture_map;
+std::vector<std::vector<Tile *> *> tiles_map;
+std::vector<SDL_Rect *> tile_clips_map;
 
 // Dot texture
-LTexture gDotTexture;
-LTexture gDot2Texture;
+LTexture gDotTexture1;
+LTexture gDot2Texture1;
+LTexture gDotTexture2;
+LTexture gDot2Texture2;
+std::vector<LTexture *> dot1_texture_map;
+std::vector<LTexture *> dot2_texture_map;
 
 // Modulate test texture
 LTexture gModulateTexture;
@@ -100,15 +120,25 @@ std::vector<LButton> gButton(TOTAL_BUTTONS, LButton(BUTTON_WIDTH, BUTTON_HEIGHT)
 // Music
 Mix_Music *gMusic = NULL;
 
-bool setTiles() {
+// Quick check if file is present in directory
+inline bool file_exists(const std::string &filename) {
+	FILE *file;
+	if (fopen_s(&file, filename.c_str(), "r") == 0) {
+		printf("file exists\n");
+		fclose(file);
+		return true;
+	}
+	else {
+		return false;
+	}
+}
+
+bool setTiles(std::vector<Tile *> *tiles, SDL_Rect *gTileClips, const char *lvl) {
 	// Tile offset
 	int x = 0, y = 0;
 
-	// Generate random maps
-	system("python assets\\maps\\generate_level.py");
-
 	// Open the map
-	std::ifstream map("assets\\maps\\map1.map");
+	std::ifstream map(lvl);
 	if (map.fail()) {
 		printf("Unable to load map file\n");
 		return false;
@@ -129,7 +159,7 @@ bool setTiles() {
 
 		// If the number is valid type
 		if ((tileType >= 0) && (tileType < TOTAL_TILE_SPRITES)) {
-			tiles.push_back(new Tile(x, y, tileType, TILE_WIDTH, TILE_HEIGHT));
+			tiles->push_back(new Tile(x, y, tileType, TILE_WIDTH, TILE_HEIGHT));
 		}
 		else {
 			// Invalid tile type
@@ -160,6 +190,9 @@ bool setTiles() {
 	gTileClips[TILE_BLACK].x = TILE_WIDTH; gTileClips[TILE_BLACK].y = TILE_HEIGHT;
 	gTileClips[TILE_BLACK].w = TILE_WIDTH; gTileClips[TILE_BLACK].h = TILE_HEIGHT;
 
+	tiles_map.push_back(tiles);
+	tile_clips_map.push_back(gTileClips);
+
 	map.close();
 	return true;
 }
@@ -177,12 +210,13 @@ bool init() {
 		return false;
 	}
 
-	// Create game Window
-	if (!gWindow[1].init("testing", SCREEN_WIDTH, SCREEN_HEIGHT, false)) {
-		printf("Window could not be created. SDL ERROR: %s\n", SDL_GetError());
-		return false;
+	// Create lvls Windows
+	for (int i = 1; i < TOTAL_WINDOWS; ++i) {
+		if (!gWindow[i].init("testing", SCREEN_WIDTH, SCREEN_HEIGHT, false)) {
+			printf("Window could not be created. SDL ERROR: %s\n", SDL_GetError());
+			return false;
+		}
 	}
-
 	// Init PNG loading
 	int imgFlags = IMG_INIT_PNG;
 	if (!(IMG_Init(imgFlags)&imgFlags)) {
@@ -235,17 +269,48 @@ bool loadMedia() {
 		return false;
 	}
 
-	// Load tile texture
-	if (!gTileTexture.loadFromFile("assets\\tiles.png", &gWindow[1])) {
+	// Load loading texture
+	if (!gLoadTexture.loadFromFile("assets\\loading.png", &gWindow[0])) {
+		printf("failed to load loading screen\n");
+		return false;
+	}
+
+	// Load tile texture lvl 1
+	if (!gTileTexture1.loadFromFile("assets\\tiles.png", &gWindow[1])) {
 		printf("failed to load tiles textures\n");
 		return false;
 	}
 
-	// Load tile map
-	if (!setTiles()) {
-		printf("failed to load tile set\n");
+	// Load tile texture lvl 2
+	if (!gTileTexture2.loadFromFile("assets\\tiles.png", &gWindow[1])) {
+		printf("failed to load tiles textures\n");
 		return false;
 	}
+
+	texture_map.push_back(&gTileTexture1);
+	texture_map.push_back(&gTileTexture2);
+
+	// Display loading screen
+	gWindow[0].renderClear();
+	gWindow[0].renderTexture(&gLoadTexture, 0, 0);
+	gWindow[0].renderUpdate();
+
+	// Generate random maps
+	if (!file_exists("assets\\maps\\map1.map")) {
+		printf("map does not exists. Generating maps...\n");
+		system("python assets\\maps\\generate_level.py");
+	}
+	// Load tile maps
+	if (!setTiles(&tiles1, gTileClips1, "assets\\maps\\map1.map")) {
+		printf("failed to load tile set 1\n");
+		return false;
+	}
+	if (!setTiles(&tiles2, gTileClips2, "assets\\maps\\map2.map")) {
+		printf("failed to load tile set 2\n");
+		return false;
+	}
+
+	gWindow[0].renderClear();
 
 	// Load modulation texture and load alpha capabilities
 	if (!gModulateTexture.loadFromFile("assets\\background.png", &gWindow[0])) {
@@ -255,12 +320,6 @@ bool loadMedia() {
 
 	// Set standard alpha blending
 	gModulateTexture.setBlendMode(SDL_BLENDMODE_BLEND);
-
-	// Load Foo's texture
-	if (!gFooTexture.loadFromFile("assets\\foo.png", &gWindow[0])) {
-		printf("failed to load foo texture image\n");
-		return false;
-	}
 
 	// Load background texture
 	if (!gBackgroundTexture.loadFromFile("assets\\background.png", &gWindow[0])) {
@@ -288,16 +347,32 @@ bool loadMedia() {
 		return false;
 	}
 
-	// Load Dot sprite
-	if (!gDotTexture.loadFromFile("assets\\dot.png", &gWindow[1])) {
+	// Load Dot sprite lvl 1
+	if (!gDotTexture1.loadFromFile("assets\\dot.png", &gWindow[1])) {
 		printf("Failed to load dot sprite texture\n");
 		return false;
 	}
-	// Load Dot sprite
-	if (!gDot2Texture.loadFromFile("assets\\dot2.png", &gWindow[1])) {
+	// Load Dot sprite lvl 1
+	if (!gDot2Texture1.loadFromFile("assets\\dot2.png", &gWindow[1])) {
 		printf("Failed to load dot sprite texture\n");
 		return false;
 	}
+
+	// Load Dot sprite lvl 2
+	if (!gDotTexture2.loadFromFile("assets\\dot.png", &gWindow[1])) {
+		printf("Failed to load dot sprite texture\n");
+		return false;
+	}
+	// Load Dot sprite lvl 2
+	if (!gDot2Texture2.loadFromFile("assets\\dot2.png", &gWindow[1])) {
+		printf("Failed to load dot sprite texture\n");
+		return false;
+	}
+
+	dot1_texture_map.push_back(&gDotTexture1);
+	dot1_texture_map.push_back(&gDot2Texture1);
+	dot2_texture_map.push_back(&gDotTexture2);
+	dot2_texture_map.push_back(&gDot2Texture2);
 
 	// Load particles
 	if (!gParticleBlue.loadFromFile("assets\\blue.bmp", &gWindow[1])) {
@@ -341,12 +416,12 @@ bool loadMedia() {
 }
 
 void close() {
-	// Free loaded image
+	// Free loaded image FREE MORE
 	gFooTexture.free();
 	gBackgroundTexture.free();
 	gTextTexture.free();
 	gButtonSpriteSheetTexture.free();
-	gDotTexture.free();
+	gDotTexture1.free();
 
 	// Free the music
 	Mix_FreeMusic(gMusic);
@@ -421,6 +496,9 @@ int main(int argc, char *argv[]) {
 	Uint8 b = 255;
 	Uint8 a = 255;
 
+	// Starting lvl
+	int curr_lvl = 0;
+
 	while (!flag) {
 		while (SDL_PollEvent(&e) != 0) {
 			// Handle window events
@@ -483,30 +561,8 @@ int main(int argc, char *argv[]) {
 		FPSText.str("");
 		FPSText << avgFPS;
 
-		if (gWindow[1].isShown()) {
-			// Move dot
-			dot1.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot2.getColliders(), 
-						&tiles);
-			dot2.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot1.getColliders(),
-						&tiles);
-
-			// Clear screens
-			for (int i = 0; i < TOTAL_WINDOWS; i++) gWindow[i].renderClear();
-
-			// Render the level
-			for (int i = 0; i < TOTAL_TILES; i++) {
-				tiles[i]->render(&gTileTexture, &gWindow[1], gTileClips);
-			}
-
-			// Render dot
-			dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
-			dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);
-			
-			// Render the FPS
-			gWindow[1].renderText(&gFPSTextTexture, FPSFont, &gameWindowTextColor, &FPSText);
-			gWindow[1].renderTexture(&gFPSTextTexture, 0, 0);
-		}
-		else {
+		// Main menu
+		if (gWindow[0].isShown()) {
 			// Play the music
 			if (Mix_PlayingMusic() == 0) {
 				// Play the music
@@ -533,6 +589,33 @@ int main(int argc, char *argv[]) {
 					gButtonSpriteClips);
 			}
 			gWindow[0].renderTexture(&gFPSTextTexture, 0, 0);
+		}
+		else {
+			// Move dot
+			dot1.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot2.getColliders(),
+				tiles_map[curr_lvl]);
+			dot2.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot1.getColliders(),
+				tiles_map[curr_lvl]);
+
+			// Clear screens
+			for (int i = 0; i < TOTAL_WINDOWS; i++) gWindow[i].renderClear();
+
+			// Render the level
+			for (int i = 0; i < TOTAL_TILES; i++) {
+				(*tiles_map[curr_lvl])[i]->render(texture_map[curr_lvl], &gWindow[1], tile_clips_map[curr_lvl]);
+			}
+
+			// Render dot
+			dot1.render(0, 0, dot1_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+			dot2.render(0, 0, dot2_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+
+			// Render the FPS
+			gWindow[1].renderText(&gFPSTextTexture, FPSFont, &gameWindowTextColor, &FPSText);
+			gWindow[1].renderTexture(&gFPSTextTexture, 0, 0);
+
+			if ((dot1.isWin() || dot2.isWin()) && curr_lvl < TOTAL_LEVELS-1) {
+				curr_lvl++;
+			}
 		}
 		// Update All Screens
 		for (int i = 0; i < TOTAL_WINDOWS; i++) gWindow[i].renderUpdate();
