@@ -25,7 +25,7 @@ const int SCREEN_WIDTH = 600;
 const int TOTAL_TILES = 180;
 
 // Total number of levels
-const int TOTAL_LEVELS = 2;
+const int TOTAL_LEVELS = 8;
 
 // Total number of tile sprites
 const int TOTAL_TILE_SPRITES = 4;
@@ -45,9 +45,13 @@ enum TileTypes {
 // Button constants
 const int BUTTON_WIDTH = 50;
 const int BUTTON_HEIGHT = 20;
-const int TOTAL_BUTTONS = 1;
+const int TOTAL_BUTTONS = 2;
 const int BUTTON_SPRITE_TOTAL = 2;
  
+// Start time
+const int TIME_START = 25;
+const double TIME_SCALE = 1.5;
+
 // Key press surface constants
 enum KeyPressSurfaces {
 	KEY_PRESS_SURFACE_DEFAULT,
@@ -72,7 +76,6 @@ LTexture gLoadTexture;
 LTexture gTextTexture;
 
 // Scene textures
-LTexture gFooTexture;
 LTexture gBackgroundTexture;
 
 // Particle textures
@@ -81,15 +84,39 @@ LTexture gParticleBlue;
 LTexture gParticleRed;
 LTexture gShimmerTexture;
 
+// Game over texture
+LTexture gGameOverTexture;
+
+// Win over texture
+LTexture gWinOverTexture;
+
 // Tiles texture
+LTexture gTileTexture;
 // Lvl 1
-LTexture gTileTexture1;
 std::vector<Tile *> tiles1;
 SDL_Rect gTileClips1[TOTAL_TILE_SPRITES];
 // Lvl 2
-LTexture gTileTexture2;
 std::vector<Tile *> tiles2;
 SDL_Rect gTileClips2[TOTAL_TILE_SPRITES];
+// Lvl 3
+std::vector<Tile *> tiles3;
+SDL_Rect gTileClips3[TOTAL_TILE_SPRITES];
+// Lvl 4
+std::vector<Tile *> tiles4;
+SDL_Rect gTileClips4[TOTAL_TILE_SPRITES];
+// Lvl 5
+std::vector<Tile *> tiles5;
+SDL_Rect gTileClips5[TOTAL_TILE_SPRITES];
+// Lvl 6
+std::vector<Tile *> tiles6;
+SDL_Rect gTileClips6[TOTAL_TILE_SPRITES];
+// Lvl 7
+std::vector<Tile *> tiles7;
+SDL_Rect gTileClips7[TOTAL_TILE_SPRITES];
+// Lvl 8
+std::vector<Tile *> tiles8;
+SDL_Rect gTileClips8[TOTAL_TILE_SPRITES];
+
 
 // Map to keep array tiles in order
 std::vector<LTexture *> texture_map;
@@ -97,12 +124,8 @@ std::vector<std::vector<Tile *> *> tiles_map;
 std::vector<SDL_Rect *> tile_clips_map;
 
 // Dot texture
-LTexture gDotTexture1;
-LTexture gDot2Texture1;
-LTexture gDotTexture2;
-LTexture gDot2Texture2;
-std::vector<LTexture *> dot1_texture_map;
-std::vector<LTexture *> dot2_texture_map;
+LTexture gDotTexture;
+LTexture gDot2Texture;
 
 // Modulate test texture
 LTexture gModulateTexture;
@@ -110,9 +133,19 @@ LTexture gModulateTexture;
 // FPS text
 LTexture gFPSTextTexture;
 
-// Mouse Button sprites
-SDL_Rect gButtonSpriteClips[BUTTON_SPRITE_TOTAL];
-LTexture gButtonSpriteSheetTexture;
+// Timer texture
+LTexture gTimerTextTexture;
+
+// Score texture
+LTexture gScoreTextTexture;
+
+// Start Button sprites
+SDL_Rect gButtonStartClips[BUTTON_SPRITE_TOTAL];
+LTexture gButtonStartTexture;
+
+// Restart Button sprites
+SDL_Rect gButtonRestartClips[BUTTON_SPRITE_TOTAL];
+LTexture gButtonRestartTexture;
 
 // Button objects
 std::vector<LButton> gButton(TOTAL_BUTTONS, LButton(BUTTON_WIDTH, BUTTON_HEIGHT));
@@ -275,21 +308,27 @@ bool loadMedia() {
 		return false;
 	}
 
-	// Load tile texture lvl 1
-	if (!gTileTexture1.loadFromFile("assets\\tiles.png", &gWindow[1])) {
+	// Load game over texture
+	if (!gGameOverTexture.loadFromFile("assets\\game_over.png", &gWindow[1])) {
+		printf("failed to load game over screen\n");
+		return false;
+	}
+
+	// Load win over texture
+	if (!gWinOverTexture.loadFromFile("assets\\win_over.png", &gWindow[1])) {
+		printf("failed to load win over screen\n");
+		return false;
+	}
+
+	// Load tile texture lvls
+	if (!gTileTexture.loadFromFile("assets\\tiles.png", &gWindow[1])) {
 		printf("failed to load tiles textures\n");
 		return false;
 	}
 
-	// Load tile texture lvl 2
-	if (!gTileTexture2.loadFromFile("assets\\tiles.png", &gWindow[1])) {
-		printf("failed to load tiles textures\n");
-		return false;
+	for (int i = 0; i < TOTAL_LEVELS; i++) {
+		texture_map.push_back(&gTileTexture);
 	}
-
-	texture_map.push_back(&gTileTexture1);
-	texture_map.push_back(&gTileTexture2);
-
 	// Display loading screen
 	gWindow[0].renderClear();
 	gWindow[0].renderTexture(&gLoadTexture, 0, 0);
@@ -307,6 +346,30 @@ bool loadMedia() {
 	}
 	if (!setTiles(&tiles2, gTileClips2, "assets\\maps\\map2.map")) {
 		printf("failed to load tile set 2\n");
+		return false;
+	}
+	if (!setTiles(&tiles3, gTileClips3, "assets\\maps\\map3.map")) {
+		printf("failed to load tile set 3\n");
+		return false;
+	}
+	if (!setTiles(&tiles4, gTileClips4, "assets\\maps\\map4.map")) {
+		printf("failed to load tile set 4\n");
+		return false;
+	}
+	if (!setTiles(&tiles5, gTileClips5, "assets\\maps\\map5.map")) {
+		printf("failed to load tile set 5\n");
+		return false;
+	}
+	if (!setTiles(&tiles6, gTileClips6, "assets\\maps\\map6.map")) {
+		printf("failed to load tile set 6\n");
+		return false;
+	}
+	if (!setTiles(&tiles7, gTileClips7, "assets\\maps\\map7.map")) {
+		printf("failed to load tile set 7\n");
+		return false;
+	}
+	if (!setTiles(&tiles8, gTileClips8, "assets\\maps\\map8.map")) {
+		printf("failed to load tile set 8\n");
 		return false;
 	}
 
@@ -347,32 +410,16 @@ bool loadMedia() {
 		return false;
 	}
 
-	// Load Dot sprite lvl 1
-	if (!gDotTexture1.loadFromFile("assets\\dot.png", &gWindow[1])) {
+	// Load Dot sprite
+	if (!gDotTexture.loadFromFile("assets\\dot.png", &gWindow[1])) {
 		printf("Failed to load dot sprite texture\n");
 		return false;
 	}
-	// Load Dot sprite lvl 1
-	if (!gDot2Texture1.loadFromFile("assets\\dot2.png", &gWindow[1])) {
+	// Load Dot sprite
+	if (!gDot2Texture.loadFromFile("assets\\dot2.png", &gWindow[1])) {
 		printf("Failed to load dot sprite texture\n");
 		return false;
 	}
-
-	// Load Dot sprite lvl 2
-	if (!gDotTexture2.loadFromFile("assets\\dot.png", &gWindow[1])) {
-		printf("Failed to load dot sprite texture\n");
-		return false;
-	}
-	// Load Dot sprite lvl 2
-	if (!gDot2Texture2.loadFromFile("assets\\dot2.png", &gWindow[1])) {
-		printf("Failed to load dot sprite texture\n");
-		return false;
-	}
-
-	dot1_texture_map.push_back(&gDotTexture1);
-	dot1_texture_map.push_back(&gDotTexture2);
-	dot2_texture_map.push_back(&gDot2Texture1);
-	dot2_texture_map.push_back(&gDot2Texture2);
 
 	// Load particles
 	if (!gParticleBlue.loadFromFile("assets\\blue.bmp", &gWindow[1])) {
@@ -393,35 +440,55 @@ bool loadMedia() {
 	}
 
 	// Load button sprites
-	if (!gButtonSpriteSheetTexture.loadFromFile("assets\\start_button.png", &gWindow[0])) {
-		printf("Failed to load button sprite texture\n");
+	// Load start button
+	if (!gButtonStartTexture.loadFromFile("assets\\start_button.png", &gWindow[0])) {
+		printf("Failed to load start button sprite texture\n");
 		return false;
 	}
 
-	else {
-		// Set sprites
-		for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i) {
-			gButtonSpriteClips[i].x = 0;
-			gButtonSpriteClips[i].y = i * 20;
-			gButtonSpriteClips[i].w = BUTTON_WIDTH;
-			gButtonSpriteClips[i].h = BUTTON_HEIGHT;
- 		}
+	// Set start sprites
+	for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i) {
+		gButtonStartClips[i].x = 0;
+		gButtonStartClips[i].y = i * BUTTON_HEIGHT;
+		gButtonStartClips[i].w = BUTTON_WIDTH;
+		gButtonStartClips[i].h = BUTTON_HEIGHT;
+ 	}
 
-		// Set the button
-		gButton[0].setPosition((SCREEN_WIDTH - BUTTON_WIDTH) / 2,
-								(SCREEN_HEIGHT - BUTTON_HEIGHT) / 2 - 140);
+	// Set the start button
+	gButton[0].setPosition((SCREEN_WIDTH - BUTTON_WIDTH) / 2,
+							(SCREEN_HEIGHT - BUTTON_HEIGHT) / 2 - 140);
+
+	// Load restart button
+	if (!gButtonRestartTexture.loadFromFile("assets\\restart_button.png", &gWindow[1])) {
+		printf("Failed to load restart button sprite texture\n");
+		return false;
 	}
+
+	// Set restart sprites
+	for (int i = 0; i < BUTTON_SPRITE_TOTAL; ++i) {
+		gButtonRestartClips[i].x = 0;
+		gButtonRestartClips[i].y = 2 * i * BUTTON_HEIGHT;
+		gButtonRestartClips[i].w = 2 * BUTTON_WIDTH;
+		gButtonRestartClips[i].h = 2 * BUTTON_HEIGHT;
+	}
+
+	// Redefine dimensions
+	gButton[1].setWidth(2 * BUTTON_WIDTH);
+	gButton[1].setHeight(2 * BUTTON_HEIGHT);
+
+	// Set the restart button
+	gButton[1].setPosition((SCREEN_WIDTH - 2 * BUTTON_WIDTH) / 2,
+							(SCREEN_HEIGHT - 2 * BUTTON_HEIGHT) / 2);
 
 	return true;
 }
 
 void close() {
 	// Free loaded image FREE MORE
-	gFooTexture.free();
 	gBackgroundTexture.free();
 	gTextTexture.free();
-	gButtonSpriteSheetTexture.free();
-	gDotTexture1.free();
+	gButtonStartTexture.free();
+	gDotTexture.free();
 
 	// Free the music
 	Mix_FreeMusic(gMusic);
@@ -459,6 +526,7 @@ int main(int argc, char *argv[]) {
 
 	// Loop flag
 	bool flag = false;
+	bool first_flag = true;
 
 	// Handle event
 	SDL_Event e;
@@ -467,11 +535,19 @@ int main(int argc, char *argv[]) {
 	SDL_Color textColor = { 0,0,0,255 };
 	SDL_Color gameWindowTextColor = { 255, 255, 255, 255 };
 
+	// Game score
+	int score=0;
+
 	// Frames per second timer
 	LTimer fpsTimer;
 
+	// Lvl timer
+	LTimer lvlTimer;
+
 	// In memory text stream
 	std::stringstream FPSText;
+	std::stringstream TimerText;
+	std::stringstream ScoreText;
 
 	// Start couting frames per second
 	int countedFrames = 0;
@@ -511,7 +587,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			// Handle custom button events
-			if (gButton[0].getInside()) {
+			if (gButton[0].getInside()) { // start the game
 				switch (e.type) {
 				case SDL_MOUSEBUTTONDOWN:
 					gWindow[1].showWindow();
@@ -520,6 +596,20 @@ int main(int argc, char *argv[]) {
 				}
 			}
 
+			if (gButton[1].getInside()) { // restart the game
+				switch (e.type) {
+				case SDL_MOUSEBUTTONDOWN:
+					curr_lvl = 0;
+					score = 0;
+					first_flag = true;
+					dot1.setPosition(0, 60);
+					dot2.setPosition(SCREEN_WIDTH - 60, 60);
+					lvlTimer.stop();
+					gWindow[1].hideWindow();
+					gWindow[0].showWindow();
+				}
+			}
+			
 			// If in game screen get dot inputs
 			if (gWindow[1].isShown()) {
 				// User request exit
@@ -573,7 +663,7 @@ int main(int argc, char *argv[]) {
 			gWindow[0].renderText(&gFPSTextTexture, FPSFont, &textColor, &FPSText);
 
 			// Clear screens
-			for (int i = 0; i < TOTAL_WINDOWS; i++) gWindow[i].renderClear();
+			gWindow[0].renderClear();
 
 			// Modulate texture
 			gBackgroundTexture.setColor(r, g, b);
@@ -584,18 +674,47 @@ int main(int argc, char *argv[]) {
 			gWindow[0].renderTexture(&gTextTexture, (SCREEN_WIDTH - gTextTexture.getWidth()) / 2,
 				(SCREEN_HEIGHT - gTextTexture.getHeight()) / 2 - 170);
 
-			for (int i = 0; i < TOTAL_BUTTONS; i++) {
-				gButton[i].render(&gButtonSpriteSheetTexture, gWindow[0].getRenderer(),
-					gButtonSpriteClips);
-			}
+			gButton[0].render(&gButtonStartTexture, gWindow[0].getRenderer(),
+					gButtonStartClips);
+			
 			gWindow[0].renderTexture(&gFPSTextTexture, 0, 0);
 		}
 		else {
-			if ((dot1.isWin() || dot2.isWin()) && curr_lvl < TOTAL_LEVELS - 1) {
+			if (curr_lvl == 0 && first_flag) {
+				lvlTimer.start();
+				first_flag = false;
+			}
+
+			// Set timer text to be rendered
+			TimerText.str("");
+			double time = (TIME_START - curr_lvl*TIME_SCALE) - lvlTimer.getTicks() / 1000.f;
+			TimerText << time;
+			score += (int)time * 100;
+			ScoreText.str("");
+			ScoreText << score;
+
+			if (time <= 0) {
+				lvlTimer.stop();
+				// Clear screen
+				gWindow[1].renderClear();
+				// Render game over screen
+				gWindow[1].renderTexture(&gGameOverTexture, 0, 0);
+				// Display restart button
+				gButton[1].render(&gButtonRestartTexture, gWindow[1].getRenderer(),
+					gButtonRestartClips);
+			}
+
+			else if ((dot1.isWin() || dot2.isWin()) && curr_lvl < TOTAL_LEVELS - 1) {
+				printf("lvl %d beat\n", curr_lvl);
+				lvlTimer.stop();
+				lvlTimer.start();
 				curr_lvl++;
 				dot1.setPosition(0, 60);
 				dot2.setPosition(SCREEN_WIDTH - 60, 60);
 				gWindow[1].renderClear();
+				
+				// Reset win state
+				dot1.setWin(false); dot2.setWin(false);
 
 				// Render the level
 				for (int i = 0; i < TOTAL_TILES; i++) {
@@ -603,11 +722,25 @@ int main(int argc, char *argv[]) {
 				}
 
 				// Render dot
-				dot1.render(0, 0, dot1_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
-				dot2.render(0, 0, dot2_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+				dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
+				dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);
 
 			}
-			else {
+			else if ((dot1.isWin() || dot2.isWin()) && curr_lvl == TOTAL_LEVELS-1) {
+				curr_lvl++;
+				lvlTimer.stop();
+				// Clear screen
+				gWindow[1].renderClear();
+				// Display Win over screen
+				gWindow[1].renderTexture(&gWinOverTexture, 0, 0);
+				// Render the score
+				gWindow[1].renderText(&gScoreTextTexture, FPSFont, &textColor, &ScoreText);
+				gWindow[1].renderTexture(&gScoreTextTexture, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100);
+				// Render restart button
+				gButton[1].render(&gButtonRestartTexture, gWindow[1].getRenderer(),
+					gButtonRestartClips);
+			}
+			else if (time > 0 && curr_lvl < TOTAL_LEVELS) {
 				// Move dot
 				dot1.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot2.getColliders(),
 					tiles_map[curr_lvl]);
@@ -623,13 +756,18 @@ int main(int argc, char *argv[]) {
 				}
 
 				// Render dot
-				dot1.render(0, 0, dot1_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
-				dot2.render(0, 0, dot2_texture_map[curr_lvl], &particleTextures, &gShimmerTexture, &gWindow[1]);
+				dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
+				dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);				
 			}
+			if (time > 0 && curr_lvl < TOTAL_LEVELS) {
+				// Render the timer
+				gWindow[1].renderText(&gTimerTextTexture, FPSFont, &gameWindowTextColor, &TimerText);
+				gWindow[1].renderTexture(&gTimerTextTexture, SCREEN_WIDTH / 2, 0);
 
-			// Render the FPS
-			gWindow[1].renderText(&gFPSTextTexture, FPSFont, &gameWindowTextColor, &FPSText);
-			gWindow[1].renderTexture(&gFPSTextTexture, 0, 0);
+				// Render the FPS
+				gWindow[1].renderText(&gFPSTextTexture, FPSFont, &gameWindowTextColor, &FPSText);
+				gWindow[1].renderTexture(&gFPSTextTexture, 0, 0);
+			}
 		}
 		// Update All Screens
 		for (int i = 0; i < TOTAL_WINDOWS; i++) gWindow[i].renderUpdate();

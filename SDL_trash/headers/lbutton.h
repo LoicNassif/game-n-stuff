@@ -28,6 +28,10 @@ public:
 	// Getter inside flag
 	bool getInside();
 
+	// Set height and width
+	void setWidth(int w);
+	void setHeight(int h);
+
 private:
 	// Top left position
 	SDL_Point mPosition;

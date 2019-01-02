@@ -56,6 +56,7 @@ bool touchesWalls(SDL_Rect box, std::vector<Tile *> *tiles, int tile_center, int
 		if (((*tiles)[i]->getType() < tile_center) && ((*tiles)[i]->getType() < tile_topleft)) {
 			// If the collision box touches the wall tile
 			if (checkCollision(box, (*tiles)[i]->getBox())) { 
+				//printf("detected collision %d\n", i);
 				return true; 
 			}
 		}
@@ -438,6 +439,11 @@ void Dot::setPosition(int x, int y)
 bool Dot::isWin()
 {
 	return mWin;
+}
+
+void Dot::setWin(int status)
+{
+	mWin = status;
 }
 
 void Dot::renderParticles(SDL_Renderer *gRenderer, std::vector<LTexture> *particleTextures,

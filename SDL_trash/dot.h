@@ -56,6 +56,9 @@ public:
 	// Get win status
 	bool isWin();
 
+	// Set win status
+	void setWin(int status);
+
 private:
 	// The X and Y offsets of the dot
 	int mPosX, mPosY;

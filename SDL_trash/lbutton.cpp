@@ -72,3 +72,13 @@ bool LButton::getInside()
 {
 	return mInside;
 }
+
+void LButton::setWidth(int w)
+{
+	BUTTON_WIDTH = w;
+}
+
+void LButton::setHeight(int h)
+{
+	BUTTON_HEIGHT = h;
+}

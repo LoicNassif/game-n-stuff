@@ -9,7 +9,7 @@ Y_BND = 12
 
 def main():
 	path = "assets/maps/"
-	for i in range(1,3):
+	for i in range(1,9):
 		end_tile = False
 		invalid_tile = True
 		while not end_tile or invalid_tile:
