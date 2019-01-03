@@ -1,10 +1,10 @@
-# Project Title
+# bffs - The Game
 
 A co-op 2D arcade puzzle game I made over the winter holidays for the GMD competition hosted by the UofT GDDC. 
 
-## Intallation
+## Installation
 
-Download everything in ` Release/release_v1_windows ` and make sure the ` .dll  ` files and the ` assets ` folder are in the same level.
+Download everything in ` Release/release_v1_windows ` and make sure the ` .dll  ` files and the ` assets ` folder are in the same level as everything else.
 
 Then run the executable file. You can delete the maps in ` assets/maps/ ` and the game will generate new ones upon rerun.
 
