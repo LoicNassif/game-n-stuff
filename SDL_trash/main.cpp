@@ -139,6 +139,9 @@ LTexture gTimerTextTexture;
 // Score texture
 LTexture gScoreTextTexture;
 
+// Transition texture
+LTexture transTextTexture;
+
 // Start Button sprites
 SDL_Rect gButtonStartClips[BUTTON_SPRITE_TOTAL];
 LTexture gButtonStartTexture;
@@ -296,7 +299,7 @@ SDL_Texture* loadTexture(std::string path) {
 
 bool loadMedia() {
 	// Load music
-	gMusic = Mix_LoadMUS("assets\\music\\lavender.mp3");
+	gMusic = Mix_LoadMUS("assets\\music\\menu_song.mp3");
 	if (gMusic == NULL) {
 		printf("failed to load lavender town music. SDL_mixer ERROR: %s\n", Mix_GetError());
 		return false;
@@ -484,11 +487,26 @@ bool loadMedia() {
 }
 
 void close() {
-	// Free loaded image FREE MORE
-	gBackgroundTexture.free();
+	// Free loaded image
+	gLoadTexture.free();
 	gTextTexture.free();
-	gButtonStartTexture.free();
+	gBackgroundTexture.free();
+	gParticleGreen.free();
+	gParticleBlue.free();
+	gParticleRed.free();
+	gShimmerTexture.free();
+	gGameOverTexture.free();
+	gWinOverTexture.free();
+	gTileTexture.free();
 	gDotTexture.free();
+	gDot2Texture.free();
+	gModulateTexture.free();
+	gFPSTextTexture.free();
+	gTimerTextTexture.free();
+	gScoreTextTexture.free();
+	transTextTexture.free();
+	gButtonRestartTexture.free();
+	gButtonStartTexture.free();
 
 	// Free the music
 	Mix_FreeMusic(gMusic);
@@ -544,10 +562,17 @@ int main(int argc, char *argv[]) {
 	// Lvl timer
 	LTimer lvlTimer;
 
+	// Transition timer
+	LTimer transTimer;
+
 	// In memory text stream
 	std::stringstream FPSText;
 	std::stringstream TimerText;
 	std::stringstream ScoreText;
+	std::stringstream transText;
+
+	transText.str("");
+	transText << "Get Ready";
 
 	// Start couting frames per second
 	int countedFrames = 0;
@@ -614,10 +639,19 @@ int main(int argc, char *argv[]) {
 			if (gWindow[1].isShown()) {
 				// User request exit
 				if (e.type == SDL_QUIT) flag = true;
-				
+
 				// Handle dot input
 				dot1.handleEvent(e, true);
 				dot2.handleEvent(e, false);
+
+				// Handle destruction
+				if (e.type == SDL_KEYDOWN) {
+					switch (e.key.keysym.sym) {
+					case SDLK_p:
+						dot1.destroyBlock(tiles_map[curr_lvl]);
+						break;
+					}
+				}
 			}
 
 			// User request exit
@@ -680,6 +714,11 @@ int main(int argc, char *argv[]) {
 			gWindow[0].renderTexture(&gFPSTextTexture, 0, 0);
 		}
 		else {
+			// Play the music
+			if (Mix_PlayingMusic() == 0) {
+				// Play the music
+				Mix_PlayMusic(gMusic, -1);
+			}
 			if (curr_lvl == 0 && first_flag) {
 				lvlTimer.start();
 				first_flag = false;
@@ -689,12 +728,9 @@ int main(int argc, char *argv[]) {
 			TimerText.str("");
 			double time = (TIME_START - curr_lvl*TIME_SCALE) - lvlTimer.getTicks() / 1000.f;
 			TimerText << time;
-			score += (int)time * 100;
-			ScoreText.str("");
-			ScoreText << score;
 
 			if (time <= 0) {
-				lvlTimer.stop();
+				lvlTimer.pause();
 				// Clear screen
 				gWindow[1].renderClear();
 				// Render game over screen
@@ -705,6 +741,10 @@ int main(int argc, char *argv[]) {
 			}
 
 			else if ((dot1.isWin() || dot2.isWin()) && curr_lvl < TOTAL_LEVELS - 1) {
+				score += (int)time * 100;
+				ScoreText.str("");
+				ScoreText << score;
+
 				printf("lvl %d beat\n", curr_lvl);
 				lvlTimer.stop();
 				lvlTimer.start();
@@ -716,15 +756,25 @@ int main(int argc, char *argv[]) {
 				// Reset win state
 				dot1.setWin(false); dot2.setWin(false);
 
-				// Render the level
-				for (int i = 0; i < TOTAL_TILES; i++) {
-					(*tiles_map[curr_lvl])[i]->render(texture_map[curr_lvl], &gWindow[1], tile_clips_map[curr_lvl]);
+				transTimer.start();
+				while (transTimer.getTicks() / 1000.f < 3) {
+					gWindow[1].renderClear();
+					// Render the level
+					for (int i = 0; i < TOTAL_TILES; i++) {
+						(*tiles_map[curr_lvl])[i]->render(texture_map[curr_lvl], &gWindow[1], tile_clips_map[curr_lvl]);
+					}
+
+					// Render dot
+					dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
+					dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);
+				
+					// Render transition text
+					gWindow[1].renderText(&transTextTexture, FPSFont, &gameWindowTextColor, &transText);
+					gWindow[1].renderTexture(&transTextTexture, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+
+					gWindow[1].renderUpdate();
 				}
-
-				// Render dot
-				dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
-				dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);
-
+				transTimer.stop();
 			}
 			else if ((dot1.isWin() || dot2.isWin()) && curr_lvl == TOTAL_LEVELS-1) {
 				curr_lvl++;

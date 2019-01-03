@@ -65,6 +65,21 @@ bool touchesWalls(SDL_Rect box, std::vector<Tile *> *tiles, int tile_center, int
 	return false;
 }
 
+int getWallIndex(SDL_Rect box, std::vector<Tile *> *tiles, int tile_center, int tile_topleft) {
+	// Go through the tiles
+	for (size_t i = 0; i < tiles->size(); ++i) {
+		// If the tile is a wall type tile
+		if (((*tiles)[i]->getType() < tile_center) && ((*tiles)[i]->getType() < tile_topleft)) {
+			// If the collision box touches the wall tile
+			if (checkCollision(box, (*tiles)[i]->getBox())) {
+				printf("returning %d\n", i);
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+
 bool checkCollision(Circle &a, Circle &b) {
 	// Calculate total radius squared
 	int totalRadiusSquared = a.r + b.r;
@@ -146,6 +161,10 @@ Dot::Dot(int x, int y, std::vector<LTexture> *particleTextures)
 	// Set collision box dimensions
 	mCollider.w = DOT_WIDTH;
 	mCollider.h = DOT_HEIGHT;
+
+	// Set destroyer collision box
+	mColliderDestroy.w = DOT_WIDTH + DOT_WIDTH * 0.5;
+	mColliderDestroy.h = DOT_HEIGHT + DOT_HEIGHT * 0.5;
 
 	// Init the velocities
 	mVelX = 0;
@@ -444,6 +463,20 @@ bool Dot::isWin()
 void Dot::setWin(int status)
 {
 	mWin = status;
+}
+
+void Dot::destroyBlock(std::vector<Tile *> *TileColliders)
+{
+	if (mDestroy > 0) {
+		printf("calling destroy with dims w:%d and h:%d\n", mColliderDestroy.w, mColliderDestroy.h);
+		int index = getWallIndex(mColliderDestroy, TileColliders, 3, 3);
+		printf("index: %d\n", index);
+		if (index > -1) { // Collision
+			printf("destroying tile %d\n", index);
+			mDestroy--;
+			(*TileColliders)[index]->setType(3);
+		}
+	}
 }
 
 void Dot::renderParticles(SDL_Renderer *gRenderer, std::vector<LTexture> *particleTextures,

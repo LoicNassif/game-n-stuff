@@ -59,6 +59,9 @@ public:
 	// Set win status
 	void setWin(int status);
 
+	// Destroy the block it is touching
+	void destroyBlock(std::vector<Tile *> *TileColliders);
+
 private:
 	// The X and Y offsets of the dot
 	int mPosX, mPosY;
@@ -68,6 +71,9 @@ private:
 
 	// Dot's collision box
 	SDL_Rect mCollider;
+
+	// Dot's destroy box
+	SDL_Rect mColliderDestroy;
 
 	// Dot's alternative circle box
 	Circle *mCircleCollider = NULL;
@@ -87,5 +93,8 @@ private:
 
 	// flag to see if a dot won
 	bool mWin=false;
+
+	// Destroy tokens
+	int mDestroy = 5;
 };
 
