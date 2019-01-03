@@ -241,14 +241,14 @@ bool init() {
 	}
 
 	// Create Start Window
-	if (!gWindow[0].init("MyBones", SCREEN_WIDTH, SCREEN_HEIGHT, true)) {
+	if (!gWindow[0].init("Oof Ouch Owie", SCREEN_WIDTH, SCREEN_HEIGHT, true)) {
 		printf("Window could not be created. SDL ERROR: %s\n", SDL_GetError());
 		return false;
 	}
 
 	// Create lvls Windows
 	for (int i = 1; i < TOTAL_WINDOWS; ++i) {
-		if (!gWindow[i].init("testing", SCREEN_WIDTH, SCREEN_HEIGHT, false)) {
+		if (!gWindow[i].init("My Bones", SCREEN_WIDTH, SCREEN_HEIGHT, false)) {
 			printf("Window could not be created. SDL ERROR: %s\n", SDL_GetError());
 			return false;
 		}
@@ -408,7 +408,7 @@ bool loadMedia() {
 	// Render text
 	SDL_Color textColor = { 0,0,0 };
 	SDL_Color gameWindowTextColor = { 255, 255, 255 };
-	if (!gTextTexture.loadFromRenderedText("Oof Ouch Owie", textColor, gFont, gWindow[0].getRenderer())) {
+	if (!gTextTexture.loadFromRenderedText("bffs", textColor, gFont, gWindow[0].getRenderer())) {
 		printf("failed to render text texture\n");
 		return false;
 	}
@@ -630,8 +630,25 @@ int main(int argc, char *argv[]) {
 					dot1.setPosition(0, 60);
 					dot2.setPosition(SCREEN_WIDTH - 60, 60);
 					lvlTimer.stop();
+					dot1.setDestroyTokens(3);
+					dot2.setDestroyTokens(3);
+
+					dot1.setWin(false); dot2.setWin(false);
+					dot1.setChosenOne(false); dot2.setChosenOne(false);
+
 					gWindow[1].hideWindow();
 					gWindow[0].showWindow();
+					for (size_t i = 0; i < tiles_map.size(); i++) {
+						tiles_map[i]->clear();
+					}
+					tiles_map.clear();
+					texture_map.clear();
+					tile_clips_map.clear();
+					// Load the Media
+					if (!loadMedia()) {
+						printf("Failed to load media\n");
+						return 1;
+					}
 				}
 			}
 			
@@ -649,6 +666,9 @@ int main(int argc, char *argv[]) {
 					switch (e.key.keysym.sym) {
 					case SDLK_p:
 						dot1.destroyBlock(tiles_map[curr_lvl]);
+						break;
+					case SDLK_q:
+						dot2.destroyBlock(tiles_map[curr_lvl]);
 						break;
 					}
 				}
@@ -722,6 +742,37 @@ int main(int argc, char *argv[]) {
 			if (curr_lvl == 0 && first_flag) {
 				lvlTimer.start();
 				first_flag = false;
+				transText.str("");
+
+				// Randomly choose the chosen one
+				if (rand() % 2 > 0) {
+					dot1.setChosenOne(true);
+					transText << "Get Ready. p1 deletes";
+				}
+				else {
+					dot2.setChosenOne(true);
+					transText << "Get Ready. p2 deletes";
+				}
+
+				transTimer.start();
+				while (transTimer.getTicks() / 1000.f < 2.5) {
+					gWindow[1].renderClear();
+					// Render the level
+					for (int i = 0; i < TOTAL_TILES; i++) {
+						(*tiles_map[curr_lvl])[i]->render(texture_map[curr_lvl], &gWindow[1], tile_clips_map[curr_lvl]);
+					}
+
+					// Render dot
+					dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
+					dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);
+
+					// Render transition text
+					gWindow[1].renderText(&transTextTexture, FPSFont, &gameWindowTextColor, &transText);
+					gWindow[1].renderTexture(&transTextTexture, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2);
+
+					gWindow[1].renderUpdate();
+				}
+				transTimer.stop();
 			}
 
 			// Set timer text to be rendered
@@ -740,7 +791,7 @@ int main(int argc, char *argv[]) {
 					gButtonRestartClips);
 			}
 
-			else if ((dot1.isWin() || dot2.isWin()) && curr_lvl < TOTAL_LEVELS - 1) {
+			else if ((dot1.isWin() && dot2.isWin()) && curr_lvl < TOTAL_LEVELS - 1) {
 				score += (int)time * 100;
 				ScoreText.str("");
 				ScoreText << score;
@@ -751,13 +802,29 @@ int main(int argc, char *argv[]) {
 				curr_lvl++;
 				dot1.setPosition(0, 60);
 				dot2.setPosition(SCREEN_WIDTH - 60, 60);
+				dot1.setDestroyTokens(3);
+				dot2.setDestroyTokens(3);
 				gWindow[1].renderClear();
 				
 				// Reset win state
 				dot1.setWin(false); dot2.setWin(false);
 
+				// Reset chosen state
+				dot1.setChosenOne(false); dot2.setChosenOne(false);
+
+				transText.str("");
+				// Randomly choose the chosen one
+				if (rand() % 2 > 0) {
+					dot1.setChosenOne(true);
+					transText << "Get Ready. p1 deletes";
+				}
+				else {
+					dot2.setChosenOne(true);
+					transText << "Get Ready. p2 deletes";
+				}
+
 				transTimer.start();
-				while (transTimer.getTicks() / 1000.f < 3) {
+				while (transTimer.getTicks() / 1000.f < 2.5) {
 					gWindow[1].renderClear();
 					// Render the level
 					for (int i = 0; i < TOTAL_TILES; i++) {
@@ -776,7 +843,7 @@ int main(int argc, char *argv[]) {
 				}
 				transTimer.stop();
 			}
-			else if ((dot1.isWin() || dot2.isWin()) && curr_lvl == TOTAL_LEVELS-1) {
+			else if ((dot1.isWin() && dot2.isWin()) && curr_lvl == TOTAL_LEVELS-1) {
 				curr_lvl++;
 				lvlTimer.stop();
 				// Clear screen
@@ -806,8 +873,12 @@ int main(int argc, char *argv[]) {
 				}
 
 				// Render dot
-				dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
-				dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);				
+				if (!dot1.isWin()) {
+					dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
+				}
+				if (!dot2.isWin()) {
+					dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);
+				}
 			}
 			if (time > 0 && curr_lvl < TOTAL_LEVELS) {
 				// Render the timer

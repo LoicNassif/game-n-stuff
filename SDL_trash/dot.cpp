@@ -65,11 +65,11 @@ bool touchesWalls(SDL_Rect box, std::vector<Tile *> *tiles, int tile_center, int
 	return false;
 }
 
-int getWallIndex(SDL_Rect box, std::vector<Tile *> *tiles, int tile_center, int tile_topleft) {
+int getWallIndex(SDL_Rect box, std::vector<Tile *> *tiles, int tile_center, int tile_topleft, int tile_win) {
 	// Go through the tiles
 	for (size_t i = 0; i < tiles->size(); ++i) {
 		// If the tile is a wall type tile
-		if (((*tiles)[i]->getType() < tile_center) && ((*tiles)[i]->getType() < tile_topleft)) {
+		if (((*tiles)[i]->getType() < tile_center) && ((*tiles)[i]->getType() < tile_topleft) && ((*tiles)[i]->getType() != tile_win)) {
 			// If the collision box touches the wall tile
 			if (checkCollision(box, (*tiles)[i]->getBox())) {
 				printf("returning %d\n", i);
@@ -163,8 +163,8 @@ Dot::Dot(int x, int y, std::vector<LTexture> *particleTextures)
 	mCollider.h = DOT_HEIGHT;
 
 	// Set destroyer collision box
-	mColliderDestroy.w = DOT_WIDTH + DOT_WIDTH * 0.5;
-	mColliderDestroy.h = DOT_HEIGHT + DOT_HEIGHT * 0.5;
+	mColliderDestroy.w = DOT_WIDTH + DOT_WIDTH * 0.3;
+	mColliderDestroy.h = DOT_HEIGHT + DOT_HEIGHT * 0.3;
 
 	// Init the velocities
 	mVelX = 0;
@@ -296,6 +296,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 	// Move the dot left or right
 	mPosX += mVelX;
 	mCollider.x = mPosX;
+	mColliderDestroy.x = mPosX - DOT_WIDTH / 4;
 	shiftColliders();
 
 	// If the dot went too far to the left or right
@@ -303,6 +304,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 		// Move back
 		mPosX -= mVelX;
 		mCollider.x = mPosX;
+		mColliderDestroy.x = mPosX - DOT_WIDTH / 4;
 		shiftColliders();
 	}
 	// Check if it hit a wall
@@ -312,6 +314,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 				// Move back
 				mPosX -= mVelX;
 				mCollider.x = mPosX;
+				mColliderDestroy.x = mPosX - DOT_WIDTH / 4;
 				shiftColliders();
 			}
 		}
@@ -322,6 +325,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 			// Move back
 			mPosX -= mVelX;
 			mCollider.x = mPosX;
+			mColliderDestroy.x = mPosX - DOT_WIDTH / 4;
 			shiftColliders();
 		}
 	}
@@ -331,6 +335,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 			if (checkCollision((*circles)[i], mCollider)) {
 				mPosX -= mVelX;
 				mCollider.x = mPosX;
+				mColliderDestroy.x = mPosX - DOT_WIDTH / 4;
 				shiftColliders();
 			}
 		}
@@ -343,6 +348,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 		if (touchesWalls(mCollider, TileColliders, 3,3)) {
 			mPosX -= mVelX;
 			mCollider.x = mPosX;
+			mColliderDestroy.x = mPosX - DOT_WIDTH / 4;
 			shiftColliders();
 		}	
 	}
@@ -350,6 +356,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 	// Move the dot up or down
 	mPosY += mVelY;
 	mCollider.y = mPosY;
+	mColliderDestroy.y = mPosY - DOT_HEIGHT / 4;
 	shiftColliders();
 
 	// If the dot went too far up or down
@@ -357,6 +364,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 		// Move back
 		mPosY -= mVelY;
 		mCollider.y = mPosY;
+		mColliderDestroy.y = mPosY - DOT_HEIGHT / 4;
 		shiftColliders();
 	}
 	// Check if dot hit wall
@@ -366,6 +374,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 				// Move back
 				mPosY -= mVelY;
 				mCollider.y = mPosY;
+				mColliderDestroy.y = mPosY - DOT_HEIGHT / 4;
 				shiftColliders();
 			}
 		}
@@ -376,6 +385,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 			// Move back
 			mPosY -= mVelY;
 			mCollider.y = mPosY;
+			mColliderDestroy.y = mPosY - DOT_HEIGHT / 4;
 			shiftColliders();
 		}
 	}
@@ -385,6 +395,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 			if (checkCollision((*circles)[i], mCollider)) {
 				mPosY -= mVelY;
 				mCollider.y = mPosY;
+				mColliderDestroy.y = mPosY - DOT_HEIGHT / 4;
 				shiftColliders();
 			}
 		}
@@ -397,6 +408,7 @@ void Dot::move(int xlim, int ylim, std::vector<SDL_Rect> *walls, std::vector<Cir
 		if (touchesWalls(mCollider, TileColliders, 3, 3)) {
 			mPosY -= mVelY;
 			mCollider.y = mPosY;
+			mColliderDestroy.y = mPosY - DOT_HEIGHT / 4;
 			shiftColliders();
 		}
 	}
@@ -467,16 +479,25 @@ void Dot::setWin(int status)
 
 void Dot::destroyBlock(std::vector<Tile *> *TileColliders)
 {
-	if (mDestroy > 0) {
+	if (mDestroy > 0 && mChosenOne) {
 		printf("calling destroy with dims w:%d and h:%d\n", mColliderDestroy.w, mColliderDestroy.h);
-		int index = getWallIndex(mColliderDestroy, TileColliders, 3, 3);
-		printf("index: %d\n", index);
+		int index = getWallIndex(mColliderDestroy, TileColliders, 3, 3, 1);
 		if (index > -1) { // Collision
 			printf("destroying tile %d\n", index);
 			mDestroy--;
 			(*TileColliders)[index]->setType(3);
 		}
 	}
+}
+
+void Dot::setDestroyTokens(int param)
+{
+	mDestroy = param;
+}
+
+void Dot::setChosenOne(bool flag)
+{
+	mChosenOne = flag;
 }
 
 void Dot::renderParticles(SDL_Renderer *gRenderer, std::vector<LTexture> *particleTextures,

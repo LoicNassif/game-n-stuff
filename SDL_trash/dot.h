@@ -23,7 +23,7 @@ public:
 	static const int DOT_HEIGHT = 20;
 
 	// Maximum axis velocity of the dot
-	static const int DOT_VEL = 5;
+	static const int DOT_VEL = 4;
 
 	Dot(int x, int y, std::vector<LTexture> *particleTexture);
 	~Dot();
@@ -62,6 +62,12 @@ public:
 	// Destroy the block it is touching
 	void destroyBlock(std::vector<Tile *> *TileColliders);
 
+	// Set the amount of destroy tockens
+	void setDestroyTokens(int param);
+
+	// Set the chosen one param
+	void setChosenOne(bool flag);
+
 private:
 	// The X and Y offsets of the dot
 	int mPosX, mPosY;
@@ -95,6 +101,9 @@ private:
 	bool mWin=false;
 
 	// Destroy tokens
-	int mDestroy = 5;
+	int mDestroy = 3;
+
+	// Lock or unlock the ability to break blocks
+	bool mChosenOne = false;
 };
 

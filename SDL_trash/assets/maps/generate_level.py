@@ -23,7 +23,7 @@ def main():
 					r = random.randint(LWER_BND, UPER_BND)
 					# weight the probability in favor of clear blocks
 					w = random.randint(0, 100)
-					if w < 60:
+					if w < 35:
 						r = 3
 
 					# Positions around spawn needs to be clear
@@ -56,6 +56,18 @@ def main():
 							r -= 1
 						r = "0"+str(r)+" "
 						fh.write(r)
+					elif ((int(X_BND/2 - 3) < x < int(X_BND/2 + 3)) and (int(Y_BND/2 - 3) < y < int(Y_BND/2 + 3))):
+						r = 1
+						end_tile = True
+						r = "0"+str(r)+" "
+						fh.write(r)
+					elif (r == 1):
+						if random.randint(0,1) == 0:
+							r += 1
+						else:
+							r -= 1
+						r = "0"+str(r)+" "
+						fh.write(r)						
 					else:
 						invalid_tile = True
 
