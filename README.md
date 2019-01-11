@@ -11,6 +11,7 @@ Then run the executable file. You can delete the maps in ` assets/maps/ ` and th
 ## Built With
 
 * [SDL 2](https://www.libsdl.org/) - low level media library
+* [aseprite](https://www.aseprite.org/) - pixel art tool and editor
 
 ## Acknowledgments
 
