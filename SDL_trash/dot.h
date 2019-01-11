@@ -78,8 +78,11 @@ private:
 	// Dot's collision box
 	SDL_Rect mCollider;
 
-	// Dot's destroy box
-	SDL_Rect mColliderDestroy;
+	// Dot's destroy box horizontal
+	SDL_Rect mColliderDestroy1;
+
+	// Dot's destroy box vertical
+	SDL_Rect mColliderDestroy2;
 
 	// Dot's alternative circle box
 	Circle *mCircleCollider = NULL;

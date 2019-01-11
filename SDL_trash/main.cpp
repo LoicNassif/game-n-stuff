@@ -27,6 +27,9 @@ const int TOTAL_TILES = 180;
 // Total number of levels
 const int TOTAL_LEVELS = 8;
 
+// Total number of destroys
+const int TOTAL_DESTROY = 5;
+
 // Total number of tile sprites
 const int TOTAL_TILE_SPRITES = 4;
 
@@ -77,6 +80,9 @@ LTexture gTextTexture;
 
 // Scene textures
 LTexture gBackgroundTexture;
+
+// Tutorial texture
+LTexture gTutorialTexture;
 
 // Particle textures
 LTexture gParticleGreen;
@@ -320,6 +326,12 @@ bool loadMedia() {
 	// Load win over texture
 	if (!gWinOverTexture.loadFromFile("assets\\win_over.png", &gWindow[1])) {
 		printf("failed to load win over screen\n");
+		return false;
+	}
+
+	// Load tutorial texture
+	if (!gTutorialTexture.loadFromFile("assets\\controls_screen.png", &gWindow[1])) {
+		printf("failed to load control screen\n");
 		return false;
 	}
 
@@ -598,7 +610,7 @@ int main(int argc, char *argv[]) {
 	Uint8 a = 255;
 
 	// Starting lvl
-	int curr_lvl = 0;
+	int curr_lvl = -1;
 
 	while (!flag) {
 		while (SDL_PollEvent(&e) != 0) {
@@ -630,8 +642,8 @@ int main(int argc, char *argv[]) {
 					dot1.setPosition(0, 60);
 					dot2.setPosition(SCREEN_WIDTH - 60, 60);
 					lvlTimer.stop();
-					dot1.setDestroyTokens(3);
-					dot2.setDestroyTokens(3);
+					dot1.setDestroyTokens(TOTAL_DESTROY);
+					dot2.setDestroyTokens(TOTAL_DESTROY);
 
 					dot1.setWin(false); dot2.setWin(false);
 					dot1.setChosenOne(false); dot2.setChosenOne(false);
@@ -660,6 +672,17 @@ int main(int argc, char *argv[]) {
 				// Handle dot input
 				dot1.handleEvent(e, true);
 				dot2.handleEvent(e, false);
+
+				// handle skipping tutorial
+				if (curr_lvl == -1) {
+					if (e.type == SDL_KEYDOWN) {
+						switch (e.key.keysym.sym) {
+						case SDLK_SPACE:
+							curr_lvl++;
+							break;
+						}
+					}
+				}
 
 				// Handle destruction
 				if (e.type == SDL_KEYDOWN) {
@@ -739,6 +762,10 @@ int main(int argc, char *argv[]) {
 				// Play the music
 				Mix_PlayMusic(gMusic, -1);
 			}
+			if (curr_lvl == -1) { // Quick tutorial screen
+				gWindow[1].renderClear();
+				gWindow[1].renderTexture(&gTutorialTexture, 0, 0);
+			}
 			if (curr_lvl == 0 && first_flag) {
 				lvlTimer.start();
 				first_flag = false;
@@ -780,7 +807,7 @@ int main(int argc, char *argv[]) {
 			double time = (TIME_START - curr_lvl*TIME_SCALE) - lvlTimer.getTicks() / 1000.f;
 			TimerText << time;
 
-			if (time <= 0) {
+			if (time <= 0 && curr_lvl > -1) {
 				lvlTimer.pause();
 				// Clear screen
 				gWindow[1].renderClear();
@@ -791,7 +818,7 @@ int main(int argc, char *argv[]) {
 					gButtonRestartClips);
 			}
 
-			else if ((dot1.isWin() && dot2.isWin()) && curr_lvl < TOTAL_LEVELS - 1) {
+			else if ((dot1.isWin() && dot2.isWin()) && -1 < curr_lvl && curr_lvl < TOTAL_LEVELS - 1) {
 				score += (int)time * 100;
 				ScoreText.str("");
 				ScoreText << score;
@@ -802,8 +829,8 @@ int main(int argc, char *argv[]) {
 				curr_lvl++;
 				dot1.setPosition(0, 60);
 				dot2.setPosition(SCREEN_WIDTH - 60, 60);
-				dot1.setDestroyTokens(3);
-				dot2.setDestroyTokens(3);
+				dot1.setDestroyTokens(TOTAL_DESTROY);
+				dot2.setDestroyTokens(TOTAL_DESTROY);
 				gWindow[1].renderClear();
 				
 				// Reset win state
@@ -857,7 +884,7 @@ int main(int argc, char *argv[]) {
 				gButton[1].render(&gButtonRestartTexture, gWindow[1].getRenderer(),
 					gButtonRestartClips);
 			}
-			else if (time > 0 && curr_lvl < TOTAL_LEVELS) {
+			else if (time > 0 && curr_lvl < TOTAL_LEVELS && -1 < curr_lvl) {
 				// Move dot
 				dot1.move(SCREEN_WIDTH, SCREEN_HEIGHT, NULL, NULL, &dot2.getColliders(),
 					tiles_map[curr_lvl]);
@@ -876,11 +903,17 @@ int main(int argc, char *argv[]) {
 				if (!dot1.isWin()) {
 					dot1.render(0, 0, &gDotTexture, &particleTextures, &gShimmerTexture, &gWindow[1]);
 				}
+				else {
+					dot1.setPosition(-10, -10);
+				}
 				if (!dot2.isWin()) {
 					dot2.render(0, 0, &gDot2Texture, &particleTextures, &gShimmerTexture, &gWindow[1]);
 				}
+				else {
+					dot2.setPosition(-10, -10);
+				}
 			}
-			if (time > 0 && curr_lvl < TOTAL_LEVELS) {
+			if (time > 0 && curr_lvl < TOTAL_LEVELS && -1 < curr_lvl) {
 				// Render the timer
 				gWindow[1].renderText(&gTimerTextTexture, FPSFont, &gameWindowTextColor, &TimerText);
 				gWindow[1].renderTexture(&gTimerTextTexture, SCREEN_WIDTH / 2, 0);

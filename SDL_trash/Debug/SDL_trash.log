@@ -1,2 +1,6 @@
-﻿  main.cpp
+﻿  dot.cpp
+c:\users\loloynage\source\repos\sdl_trash\sdl_trash\dot.cpp(166): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\loloynage\source\repos\sdl_trash\sdl_trash\dot.cpp(167): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\loloynage\source\repos\sdl_trash\sdl_trash\dot.cpp(168): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\loloynage\source\repos\sdl_trash\sdl_trash\dot.cpp(169): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
   SDL_trash.vcxproj -> C:\Users\loloynage\source\repos\SDL_trash\Debug\SDL_trash.exe
