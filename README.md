@@ -3,6 +3,7 @@
 A co-op 2D arcade puzzle game I made over the winter holidays for the GMD competition hosted by the UofT GDDC. 
 
 ![](menu.png)
+![](level.png)
 
 ## Installation
 
