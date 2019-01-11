@@ -28,7 +28,7 @@ const int TOTAL_TILES = 180;
 const int TOTAL_LEVELS = 8;
 
 // Total number of destroys
-const int TOTAL_DESTROY = 5;
+const int TOTAL_DESTROY = 4;
 
 // Total number of tile sprites
 const int TOTAL_TILE_SPRITES = 4;
@@ -737,7 +737,7 @@ int main(int argc, char *argv[]) {
 			}
 
 			// Render text
-			gWindow[0].renderText(&gFPSTextTexture, FPSFont, &textColor, &FPSText);
+			//gWindow[0].renderText(&gFPSTextTexture, FPSFont, &textColor, &FPSText);
 
 			// Clear screens
 			gWindow[0].renderClear();
@@ -754,7 +754,7 @@ int main(int argc, char *argv[]) {
 			gButton[0].render(&gButtonStartTexture, gWindow[0].getRenderer(),
 					gButtonStartClips);
 			
-			gWindow[0].renderTexture(&gFPSTextTexture, 0, 0);
+			//gWindow[0].renderTexture(&gFPSTextTexture, 0, 0);
 		}
 		else {
 			// Play the music
@@ -919,8 +919,8 @@ int main(int argc, char *argv[]) {
 				gWindow[1].renderTexture(&gTimerTextTexture, SCREEN_WIDTH / 2, 0);
 
 				// Render the FPS
-				gWindow[1].renderText(&gFPSTextTexture, FPSFont, &gameWindowTextColor, &FPSText);
-				gWindow[1].renderTexture(&gFPSTextTexture, 0, 0);
+				//gWindow[1].renderText(&gFPSTextTexture, FPSFont, &gameWindowTextColor, &FPSText);
+				//gWindow[1].renderTexture(&gFPSTextTexture, 0, 0);
 			}
 		}
 		// Update All Screens
